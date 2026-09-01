@@ -8,7 +8,10 @@
 
 ## 全シナリオ共通の観測
 
-**未確定文字列は変換中の時点で共有文書に入っている。** `before-remote` の時点で B のテキストにも未確定文字列（例: "ぜんぽう"）が含まれる。ProseMirror は composition 中の DOM 変更を state に取り込み、y-prosemirror はそれをそのまま Y.Doc に書くため。この前提が下の 2, 3, 4 の結果を決めている。
+**未確定文字列は変換中の時点で共有文書に入っている。** `before-remote` の時点で B のテキストにも未確定文字列（例: "ぜんぽう"）が含まれる。根拠（コードで確認、prosemirror-view 1.42.3 / y-prosemirror 1.3.7）:
+- prosemirror-view の `DOMObserver` は composition 中も DOM 変更を `flush()` し（例外は Safari のテーブル内のみ、`domobserver.ts`）、`readDOMChange` が変更を transaction にして `composition` メタを付けて dispatch する（`domchange.ts`）。つまり未確定文字列は state に入る。
+- y-prosemirror の `ySyncPlugin` は `composition` メタも `view.composing` も参照せず（`sync-plugin.js` に該当文字列なし）、view の `update` で文書が変わるたびに `_prosemirrorChanged` → `updateYFragment` で Y.Doc に書く。
+この前提が下の 2, 3, 4 の結果を決めている。
 
 ## シナリオ別
 
