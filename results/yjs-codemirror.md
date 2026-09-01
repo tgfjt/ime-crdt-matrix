@@ -1,7 +1,7 @@
 # Yjs × CodeMirror (y-codemirror.next)
 
 - 日時: 2026-09-01
-- 環境: macOS, IME: Google 日本語入力。ブラウザ: Chrome 149（主）、Safari 26.5（下記「Safari での結果」）
+- 環境: macOS, IME: Google 日本語入力。ブラウザ: Chrome 149（主）、Safari 26.5、Firefox 142（下記「Safari での結果」「Firefox での結果」）
 - バージョン: yjs 13.6.32 / y-codemirror.next 0.3.6 / @codemirror/view 6.43.10 / @codemirror/state 6.7.2
 - 治具: `harness/yjs-codemirror`（手動）。生ログ: `yjs-codemirror.jsonl`
 - 操作: A の 1 行目末尾で変換中のまま待ち、B の編集が A に入った後に Space で変換 → Enter で確定
@@ -18,7 +18,7 @@
 | 3 | 済（未確定文字列が消される） | 済（未確定文字列の漏れ、下記） | なし |
 | 4 | 済（二重化） | 未 | 行分割でどの DOM 更新が composition を失わせるかは、DOM 変異ログ（テキストノード切り詰め＋新 `.cm-line` 追加）まで。CodeMirror の描画側のコードは未確認 |
 
-組み合わせ全体の残り: Firefox での観測
+組み合わせ全体の残り: なし（Chrome / Safari / Firefox で観測済）
 
 ## 全シナリオ共通の観測
 
@@ -50,3 +50,14 @@
 | 4 | 行中央で分割 | ❌ 強制確定 | B の編集の適用と同時に `compositionend data=""` が発火し、「どん」がひらがなのまま確定。カーソルは 13→14 と正しく移動。次の Space は全角スペース入力（`insertText "　"`）。最終: `あいうえお \nかきくけこどん　` |
 
 Chrome との違い: 4 で Chrome は composition をイベントなしに捨てて次の入力が新しい composition になる（二重化）が、Safari は `compositionend` で強制確定する。ProseMirror 版の Safari と同じ壊れ方。1, 2 は両ブラウザで問題なし。
+
+## Firefox での結果（Firefox 142、2026-09-01 07:32、生ログは同 jsonl の UA=Firefox の4件）
+
+| # | リモート編集 | 結果 | 症状 |
+| --- | --- | --- | --- |
+| 1 | 行頭に挿入 | ✅ | 変換継続。カーソル 13→16 |
+| 2 | 行末に挿入 | ✅ | 変換継続。カーソル 14 のまま。「後ろ」が「うしろ」を置き換え |
+| 3 | 行テキスト全削除 | ❌ 入力消失 | composition は続き、変換候補の切り替え（消す→ケス→けす）ごとに `compositionupdate` が来るが、DOM には空テキストノードの付け外ししか起きず、`compositionend data="けす"` 後も A は空。ProseMirror 版の Firefox 3 と同じ |
+| 4 | 行中央で分割 | ❌ 二重化（位置ずれ） | カーソルは 12→13 と正しい。composition は続くが、変換結果「毛」は**文書の先頭**（1 行目の頭）に入り、「け」は 2 行目に残る。最終: `毛あいうえお \nかきくけこけ`。記録時の判定は「強制確定」（「け」がひらがなのまま残るため）で、それも正しい |
+
+3 ブラウザの比較: 1, 2 は全ブラウザで問題なし。4 は Chrome=二重化（カーソル位置に）、Safari=強制確定、Firefox=二重化（行頭に）。3 は Chrome だけ IME の内部状態が残って再入力できた。ProseMirror 版と比べ、2 が全ブラウザで問題なしになった点が違い（原因は上記「2 が壊れない理由」）。
