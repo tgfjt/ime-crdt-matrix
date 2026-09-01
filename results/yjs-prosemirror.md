@@ -1,7 +1,7 @@
 # Yjs × ProseMirror (y-prosemirror)
 
 - 日時: 2026-09-01
-- 環境: macOS, Chrome 149, IME: macOS 日本語入力（要確認）
+- 環境: macOS, Chrome 149, IME: Google 日本語入力
 - バージョン: yjs 13.6.32 / y-prosemirror 1.3.7 / prosemirror-view 1.42.3 / prosemirror-model 1.25.11
 - 治具: `harness/yjs-prosemirror`（手動）。生ログ: `yjs-prosemirror.jsonl`
 - 操作: A の1段落目末尾で変換中のまま待ち、リモート編集到着後に Space で変換 → Enter で確定
@@ -20,12 +20,11 @@
 | # | 観測 | 原因 | 残り |
 | --- | --- | --- | --- |
 | 1 | 済（問題なし） | 不要 | なし |
-| 2 | 済（二重化） | 未 | 末尾挿入のどの DOM 更新で composition が失われるかを prosemirror-view の DOM 更新経路で特定する |
-| 3 | 済（未確定文字列が消される） | 未 | 共有文書への未確定文字列の漏れが原因であることはコードで確認済（下記「全シナリオ共通」）。IME 内部状態が残って再入力される経路は未確認 |
+| 2 | 済（二重化） | 済（ブラウザ内部の1段だけ推定） | なし |
+| 3 | 済（未確定文字列が消される） | 済（IME 内部の再入力は観測のみ） | なし |
 | 4 | 済（カーソル飛び＋二重化） | 済 | なし（IME なしでのカーソル飛びも観測済、下記） |
 
 組み合わせ全体の残り:
-- IME の種類の確認（記録は「macOS 日本語入力（要確認）」のまま）
 - 別ブラウザ（Safari / Firefox）での再観測。現状は Chrome 149 のみ
 
 ## シナリオ別
@@ -40,6 +39,15 @@
 ## 補足
 
 - 2 と 4 で `compositionend` が発火していないのは事実だが、それは「問題なし」を意味しない。ブラウザが composition の対象ノードを見失い、次のキー入力が新しい composition として扱われる。
+- 2 で二重化する原因（再実行ログ 2026-09-01 06:18 とコード）:
+  1. 変換中のカーソルは段落テキストの末尾（15）にあり、相対位置は「XmlText の末尾」として符号化される（4 と同じ、`lib.js` `absolutePositionToRelativePosition`）。
+  2. B が同じ段落の末尾に「【後】」を挿入すると、「XmlText の末尾」は挿入後の位置に解決し、`remote-tr sel=18`、DOM 選択も 18 になる。つまりカーソルは未確定文字列「きょう」から離れ、「【後】」の後ろへ移る。DOM 変異は同じテキストノードへの追記1回（`chardata "…きょう" -> "…きょう【後】"`）。
+  3. 次の Space で `compositionend` なしに新しい `compositionstart data="今日"` が 18 に入り、「きょう」は残る → `…きょう【後】今日`。
+  - 1 との違い: 1 でも同じテキストノードが書き換えられる（先頭に「【前】」追記）が、カーソルは未確定文字列の直後に留まり（16→19）、変換は継続した。したがってテキストノードの書き換えだけでは composition は失われず、**カーソルが未確定文字列から離れること**が 1 と 2 を分ける。
+  - 未確認: 「DOM 選択が composition の範囲外へ動くと Chrome が `compositionend` を出さずに composition を捨てる」というブラウザ内部の挙動は、ログ（イベントなし → 新 compositionstart）からの推定で、Chromium のコードでは確認していない。
+- 3 で未確定文字列が消えた後に変換結果が入る経路（再実行ログ 2026-09-01 06:18）:
+  - B の削除が適用されると A の段落からテキストノードが削除され `<br>` に置き換わる（`childList +[<br>]`, `-[#text("…きょう")]`）。未確定文字列は共有文書に入っていたので、リモートの削除範囲に含まれる。
+  - 次の Space で新しい `compositionstart data="今日"` が位置 1 に入る。「きょう」を IME が保持していて変換結果を送ってきたことはログから分かるが、これは Google 日本語入力の内部状態であり、コードでは確認できない（観測のみ）。
 - 4 でカーソルが分割点に移る原因（確定、再実行ログとコード追跡による）:
   1. y-prosemirror はリモート変更のたびに文書全体を置き換え、選択位置は変更前に保存した Yjs 相対位置から復元する（`sync-plugin.js` `_typeChanged` → `restoreRelativeSelection`）。
   2. 変換中のカーソルは段落テキストの末尾にあるため、相対位置は「特定の文字の後」ではなく「その段落の XmlText の末尾」として符号化される（`lib.js` `absolutePositionToRelativePosition` → `createRelativePositionFromTypeIndex(text, length, 0)`）。
