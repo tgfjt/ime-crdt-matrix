@@ -12,7 +12,7 @@
 
 | 同期層 \ エディタ層 | ProseMirror | CodeMirror | Lexical |
 | --- | --- | --- | --- |
-| **Yjs** | [❌](results/yjs-prosemirror.md) Chrome: 1✅ 2❌ 3⚠️ 4❌ / Safari: 1✅ 2❌ 3❌ 4❌ | 未検証 | 未検証 |
+| **Yjs** | [❌](results/yjs-prosemirror.md) Chrome: 1✅ 2❌ 3⚠️ 4❌ / Safari: 1✅ 2❌ 3❌ 4❌ / Firefox: 1✅ 2❌ 3❌ 4❌ | 未検証 | 未検証 |
 | **Loro** | 未検証 | 未検証 | 未検証 |
 | **Automerge** | 未検証 | 未検証 | 未検証 |
 

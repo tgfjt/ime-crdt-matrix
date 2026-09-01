@@ -1,7 +1,7 @@
 # Yjs × ProseMirror (y-prosemirror)
 
 - 日時: 2026-09-01
-- 環境: macOS, IME: Google 日本語入力。ブラウザ: Chrome 149（主）、Safari 26.5（下記「Safari での結果」）
+- 環境: macOS, IME: Google 日本語入力。ブラウザ: Chrome 149（主）、Safari 26.5、Firefox 142（下記「Safari での結果」「Firefox での結果」）
 - バージョン: yjs 13.6.32 / y-prosemirror 1.3.7 / prosemirror-view 1.42.3 / prosemirror-model 1.25.11
 - 治具: `harness/yjs-prosemirror`（手動）。生ログ: `yjs-prosemirror.jsonl`
 - 操作: A の1段落目末尾で変換中のまま待ち、リモート編集到着後に Space で変換 → Enter で確定
@@ -24,8 +24,7 @@
 | 3 | 済（未確定文字列が消される） | 済（IME 内部の再入力は観測のみ） | なし |
 | 4 | 済（カーソル飛び＋二重化） | 済 | なし（IME なしでのカーソル飛びも観測済、下記） |
 
-組み合わせ全体の残り:
-- Firefox での再観測（任意）。Chrome と Safari は済
+組み合わせ全体の残り: なし（Chrome / Safari / Firefox で観測済）
 
 ## シナリオ別
 
@@ -80,3 +79,19 @@ Chrome との違い:
 - 1 は両ブラウザで問題なし。1 と 2〜4 を分けるのは Chrome と同じで、カーソルと未確定文字列の位置関係が保たれるかどうか（1 ではカーソルが未確定文字列の直後に留まる）。
 - カーソル位置の復元（`remote-tr sel=`）は両ブラウザで同じ値になる。これは y-prosemirror の処理でブラウザに依存しないため。
 - 未確認: Safari が `compositionend` を発火する条件（DOM 選択の移動か、テキストノードの変更か）は、WebKit のコードでは確認していない。
+
+## Firefox での結果（Firefox 142、2026-09-01 06:51、生ログは同 jsonl の UA=Firefox の4件）
+
+| # | リモート編集 | 結果 | 症状 |
+| --- | --- | --- | --- |
+| 1 | 段落先頭に挿入 | ✅ | 変換継続。カーソル 14→17。「前」が「まえ」を置き換え、二重化なし |
+| 2 | 段落末尾に挿入 | ❌ 二重化（位置ずれ） | `compositionend` も新しい `compositionstart` も発火せず、同じ composition が続く。しかし変換結果「後ろ」は**段落の先頭**（位置 1）に入り、「うしろ」は残る。最終: `後ろあいうえお かきくけこうしろ【後】` |
+| 3 | 段落テキスト全削除 | ❌ 入力消失 | composition は続き、変換候補の切り替え（段→団→断→…→談）ごとに `compositionupdate` が来るが、DOM には空のテキストノードと `<br>` の付け外しだけが起き、文字が入らない。`compositionend data="談"` 後も A は空。最終: `` |
+| 4 | 段落中央で分割 | ❌ 二重化（位置ずれ）＋カーソル飛び | カーソルは分割点 7 へ（`remote-tr sel=7`、y-prosemirror の処理）。composition は続くが、変換結果「談」は前半段落の**先頭**（位置 1）に入り、「だん」は後半段落に残る。最終: `談あいうえお かきくけこだん` |
+
+3 ブラウザの比較（2〜4 で composition がどうなるか）:
+- Chrome: composition をイベントなしに捨てる。次の入力は新しい composition としてカーソル位置に入る → 二重化（カーソル位置に）
+- Safari: B の編集の適用と同時に `compositionend data=""` → 未確定文字列がひらがなのまま確定、IME 状態も破棄 → 強制確定 / 入力消失
+- Firefox: composition は続くが、変換結果が入る DOM 上の位置が段落先頭にずれる（2, 4）、または削除済みノードに向いて文書に入らない（3） → 二重化（段落先頭に）/ 入力消失
+- 1 は 3 ブラウザとも問題なし。カーソルの復元位置（`remote-tr sel=`）は 3 ブラウザで同じ。
+- 未確認: Firefox で変換結果が段落先頭に入る機構（Gecko が composition の範囲をどう保持しているか）は、コードでは確認していない。ログ上は、B の編集後の最初の `compositionupdate` で先頭のテキストノードに前置される（`chardata "あいうえお " -> "談あいうえお "`）ことまで。
