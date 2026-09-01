@@ -1,7 +1,7 @@
 # Yjs × ProseMirror (y-prosemirror)
 
 - 日時: 2026-09-01
-- 環境: macOS, Chrome 149, IME: Google 日本語入力
+- 環境: macOS, IME: Google 日本語入力。ブラウザ: Chrome 149（主）、Safari 26.5（下記「Safari での結果」）
 - バージョン: yjs 13.6.32 / y-prosemirror 1.3.7 / prosemirror-view 1.42.3 / prosemirror-model 1.25.11
 - 治具: `harness/yjs-prosemirror`（手動）。生ログ: `yjs-prosemirror.jsonl`
 - 操作: A の1段落目末尾で変換中のまま待ち、リモート編集到着後に Space で変換 → Enter で確定
@@ -25,7 +25,7 @@
 | 4 | 済（カーソル飛び＋二重化） | 済 | なし（IME なしでのカーソル飛びも観測済、下記） |
 
 組み合わせ全体の残り:
-- 別ブラウザ（Safari / Firefox）での再観測。現状は Chrome 149 のみ
+- Firefox での再観測（任意）。Chrome と Safari は済
 
 ## シナリオ別
 
@@ -64,3 +64,19 @@
     A dom childList target=<div> +[<p>] -[]
     ```
     カーソルは分割点 6 へ移動した。つまりこの機構は IME に依存せず、リモートの段落分割で後半に移された範囲にカーソルがある全クライアントで起きる。IME の場合はさらに、上の DOM 変異（テキストノードの切り詰め＋新 `<p>` 追加）で composition の対象テキストノードが書き換えられるため、次の入力が新しい composition として分割点に入り二重化する。
+
+## Safari での結果（Safari 26.5、2026-09-01 06:47、生ログは同 jsonl の UA=Safari の4件）
+
+| # | リモート編集 | 結果 | 症状 |
+| --- | --- | --- | --- |
+| 1 | 段落先頭に挿入 | ✅ | 変換継続。カーソル 14→17。変換結果「前」が「まえ」を置き換え（`deleteCompositionText` → `insertFromComposition`）、二重化なし |
+| 2 | 段落末尾に挿入 | ❌ 強制確定 | B の編集が適用された直後に `compositionend data=""` が発火し、未確定の「うしろ」がそのまま確定する。以後の Space は通常の全角スペース入力（`insertText "　"`）になり、変換できない。最終: `…うしろ【後】　` |
+| 3 | 段落テキスト全削除 | ❌ 入力消失 | `compositionend data=""` が発火し、未確定文字列は削除済みなので何も残らない。Chrome と違い IME も「だん」を保持しておらず、次の Space は全角スペースになる。最終: `　` |
+| 4 | 段落中央で分割 | ❌ 強制確定＋カーソル飛び | `compositionend data=""` が発火し「だん」が後半段落に確定。カーソルは分割点 7 へ移動（`remote-tr sel=7`、機構は Chrome と同じ）。次の入力は分割点に入る。最終: `あいうえおあかきくけこだん` |
+
+Chrome との違い:
+- Chrome では 2, 3, 4 で composition がイベントなしに失われ、IME が未確定文字列を保持したまま次の Space で新しい composition として変換結果を挿入する（二重化）。
+- Safari では 2, 3, 4 で B の編集の適用と同時に `compositionend data=""` が発火し、未確定文字列がその時点の文字（ひらがな）で確定する（強制確定）。IME の内部状態も破棄され、次の入力は通常入力になる。
+- 1 は両ブラウザで問題なし。1 と 2〜4 を分けるのは Chrome と同じで、カーソルと未確定文字列の位置関係が保たれるかどうか（1 ではカーソルが未確定文字列の直後に留まる）。
+- カーソル位置の復元（`remote-tr sel=`）は両ブラウザで同じ値になる。これは y-prosemirror の処理でブラウザに依存しないため。
+- 未確認: Safari が `compositionend` を発火する条件（DOM 選択の移動か、テキストノードの変更か）は、WebKit のコードでは確認していない。
