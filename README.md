@@ -13,7 +13,7 @@
 | 同期層 \ エディタ層 | ProseMirror | CodeMirror | Lexical |
 | --- | --- | --- | --- |
 | **Yjs** | [❌](results/yjs-prosemirror.md) Chrome: 1✅ 2❌ 3⚠️ 4❌ / Safari: 1✅ 2❌ 3❌ 4❌ / Firefox: 1✅ 2❌ 3❌ 4❌ | [⚠️](results/yjs-codemirror.md) Chrome: 1✅ 2✅ 3⚠️ 4❌ / Safari: 1✅ 2✅ 3❌ 4❌ / Firefox: 1✅ 2✅ 3❌ 4❌ | [❌](results/yjs-lexical.md) Chrome: 1✅ 2✅ 3❌ 4❌ |
-| **Loro** | 未検証 | 未検証 | 未検証 |
+| **Loro** | [❌](results/loro-prosemirror.md) Chromium 自動のみ: 1⚠️ 2❌ 3⚠️ 4❌ | 未検証 | 未検証 |
 | **Automerge** | 未検証 | 未検証 | 未検証 |
 
 凡例: ✅ 問題なし / ⚠️ 条件付きで壊れる / ❌ 壊れる / 未検証
@@ -37,6 +37,7 @@
 - Yjs × ProseMirror: 手動治具で4シナリオ観測済み → [results/yjs-prosemirror.md](results/yjs-prosemirror.md)
 - Yjs × CodeMirror: 3ブラウザで4シナリオ観測済み → [results/yjs-codemirror.md](results/yjs-codemirror.md)
 - Yjs × Lexical: Chrome で4シナリオ観測済み → [results/yjs-lexical.md](results/yjs-lexical.md)
+- Loro × ProseMirror: 自動治具（Chromium）で4シナリオ観測済み、人の IME では未確認 → [results/loro-prosemirror.md](results/loro-prosemirror.md)
 - 治具（手動）: `harness/<組み合わせ>/` で `pnpm run dev`。生ログは `results/*.jsonl`
 - 治具（自動、Chromium のみ）: `cd harness/auto && node run.mjs <組み合わせ>`。Playwright + CDP `Input.imeSetComposition` で変換中を作る。人力の記録との照合結果は各 results ファイルの「自動治具との照合」節。Yjs × ProseMirror / CodeMirror は 4/4 一致、Yjs × Lexical は 3/4（シナリオ 3 が不一致）
 - 自動治具が Chromium でしか動かない理由と、それ自体が結果であること → [results/automation.md](results/automation.md)
