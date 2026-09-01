@@ -109,3 +109,5 @@ document.getElementById('record').onclick = async () => {
 }
 // 自動操作・デバッグ用
 Object.assign(window, { editors, peers })
+
+Object.assign(window, { scenarios, dump })

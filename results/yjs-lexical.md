@@ -39,3 +39,14 @@
 - 2 は ProseMirror 版と同じくカーソルが「【後】」の後ろへ移ったが、composition は失われなかった。したがって ProseMirror 版の記録にある「カーソルが未確定文字列から離れることが 1 と 2 を分ける」は ProseMirror 内での相関であり、ブラウザ共通の機構ではない（`results/yjs-prosemirror.md` に注記）。
 - 4 の `compositionend` は B の編集が適用される前（`before-remote` の 2ms 後、`remote-tr` の前）に出ている。@lexical/yjs か Lexical 本体が remote 変更の適用前に composition を終了させていると推定するが、コードでは未確認。
 - IME なしでの 4（私の Chrome で、DOM 選択を段落末尾に置いてから分割を適用）: 選択 12:11 → 12:5（前半段落の末尾 = 分割点）へ移動した。ProseMirror 版と同じ種類のカーソル移動。機構は @lexical/yjs のコードで未確認。
+
+## 自動治具との照合（Chromium headless 151、Playwright + CDP `Input.imeSetComposition`、2026-09-01）
+
+| # | 人力（Chrome 149） | 自動 | 一致 |
+| --- | --- | --- | --- |
+| 1 | 変換継続 | 変換継続 | 一致 |
+| 2 | 変換継続、選択 12:14→12:17 でも置き換え成功 | 同じ | 一致 |
+| 3 | 入力消失（「談」が DOM に入って直後に取り消される、Enter で空段落） | 新 `compositionstart` → 最終 `段落​`（ゼロ幅スペース付きで残る。`compositionend` の記録なし） | **不一致** |
+| 4 | B の編集の適用前に `compositionend`、Space が 2 段落目の先頭に入る | 適用前に `compositionend`、「文」が 2 段落目の先頭に入る → `あいうえお 文かきくけこぶん` | 一致 |
+
+3 の不一致について（未解明）: 人力では変換候補の切り替え（Space 連打）と Enter を経ているのに対し、自動は `imeSetComposition("段落")` → `Input.insertText("段落")` の 2 手。どちらの手順の差が結果の差に対応するかは未確認。Lexical の 3 は人力の記録を正とし、自動治具はこのシナリオを再現できていないものとして扱う。

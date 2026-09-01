@@ -96,3 +96,16 @@ Chrome との違い:
 - Firefox: composition は続くが、変換結果が入る DOM 上の位置が段落先頭にずれる（2, 4）、または削除済みノードに向いて文書に入らない（3） → 二重化（段落先頭に）/ 入力消失
 - 1 は 3 ブラウザとも問題なし。カーソルの復元位置（`remote-tr sel=`）は 3 ブラウザで同じ。
 - 未確認: Firefox で変換結果が段落先頭に入る機構（Gecko が composition の範囲をどう保持しているか）は、コードでは確認していない。ログ上は、B の編集後の最初の `compositionupdate` で先頭のテキストノードに前置される（`chardata "あいうえお " -> "談あいうえお "`）ことまで。
+
+## 自動治具との照合（Chromium headless 151、Playwright + CDP `Input.imeSetComposition`、2026-09-01）
+
+`harness/auto/run.mjs yjs-prosemirror` の結果（同 jsonl の `verdict: "auto"` の4件）を、人力（Google 日本語入力、Chrome 149）の記録と比べた。
+
+| # | 人力 | 自動 | 一致 |
+| --- | --- | --- | --- |
+| 1 | 変換継続、カーソル 16→19 | 変換継続、カーソル 14→17、「前」が「まえ」を置き換え | 一致 |
+| 2 | composition 喪失 → 新 `compositionstart` → `…こうほう【後】広報` | 同じ列 → `…うしろ【後】後ろ` | 一致 |
+| 3 | 空になった後、新 `compositionstart` → `段落` | 同じ → `段落` | 一致 |
+| 4 | カーソル 16→8、新 `compositionstart` で変換結果が分割点へ → `あいうえお か分割きくけこぶんかつ` | カーソル 14→7、同じ → `あいうえお文かきくけこぶん` | 一致 |
+
+イベント列（`compositionend` の有無、新しい `compositionstart` の発生、`remote-tr sel=`）も 4 件すべて一致。この組み合わせの Chrome 分は自動治具で再現できる。

@@ -81,3 +81,5 @@ document.getElementById('record').onclick = async () => {
 
 // 自動操作・デバッグ用
 Object.assign(window, { viewA, viewB, docA, docB })
+
+Object.assign(window, { scenarios, dump })

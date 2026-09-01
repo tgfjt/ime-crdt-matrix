@@ -83,3 +83,8 @@ document.getElementById('record').onclick = async () => {
   log(`recorded ${current}=${rec.verdict}`)
   setTimeout(() => location.reload(), 300)
 }
+
+// 自動操作・デバッグ用
+Object.assign(window, { viewA, viewB, docA, docB })
+
+Object.assign(window, { scenarios, dump })
