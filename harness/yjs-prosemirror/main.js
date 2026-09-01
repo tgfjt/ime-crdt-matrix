@@ -45,6 +45,13 @@ viewA.dom.addEventListener('beforeinput', e => log(`A beforeinput ${e.inputType}
 
 // 各段落の Y.XmlElement を作ったクライアント（A=初期段落, B=リモートが新規作成）
 const paras = () => docA.getXmlFragment('pm').toArray().map(e => e._item.id.client === docA.clientID ? 'A' : 'B').join(',')
+// リモート到着時に A の DOM がどう変わるかを記録する（シナリオ 2 の原因調査用）
+const describe = n => n.nodeType === 3 ? `#text(${JSON.stringify(n.data)})` : `<${n.nodeName.toLowerCase()}>`
+new MutationObserver(ms => ms.forEach(m => {
+  const s = m.type === 'characterData' ? `chardata ${JSON.stringify(m.oldValue)} -> ${JSON.stringify(m.target.data)}`
+    : `${m.type} target=${describe(m.target)} +[${[...m.addedNodes].map(describe)}] -[${[...m.removedNodes].map(describe)}]`
+  log(`A dom ${s}`)
+})).observe(viewA.dom, { childList: true, characterData: true, characterDataOldValue: true, subtree: true })
 const dump = tag => log(`${tag} A=${JSON.stringify(viewA.state.doc.textContent)} B=${JSON.stringify(viewB.state.doc.textContent)} selA=${viewA.state.selection.from} paras=${paras()}`)
 
 // B 側の1段落目に対して ProseMirror transaction で編集する（リモートユーザの操作を模す）
