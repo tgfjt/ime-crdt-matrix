@@ -12,7 +12,7 @@
 
 | 同期層 \ エディタ層 | ProseMirror | CodeMirror | Lexical |
 | --- | --- | --- | --- |
-| **Yjs** | [❌](results/yjs-prosemirror.md) Chrome: 1✅ 2❌ 3⚠️ 4❌ / Safari: 1✅ 2❌ 3❌ 4❌ / Firefox: 1✅ 2❌ 3❌ 4❌ | 未検証 | 未検証 |
+| **Yjs** | [❌](results/yjs-prosemirror.md) Chrome: 1✅ 2❌ 3⚠️ 4❌ / Safari: 1✅ 2❌ 3❌ 4❌ / Firefox: 1✅ 2❌ 3❌ 4❌ | [⚠️](results/yjs-codemirror.md) Chrome: 1✅ 2✅ 3⚠️ 4❌ | 未検証 |
 | **Loro** | 未検証 | 未検証 | 未検証 |
 | **Automerge** | 未検証 | 未検証 | 未検証 |
 
@@ -35,4 +35,5 @@
 ## ステータス
 
 - Yjs × ProseMirror: 手動治具で4シナリオ観測済み → [results/yjs-prosemirror.md](results/yjs-prosemirror.md)
+- Yjs × CodeMirror: Chrome で4シナリオ観測済み → [results/yjs-codemirror.md](results/yjs-codemirror.md)
 - 治具: `harness/<組み合わせ>/` で `pnpm run dev`。生ログは `results/*.jsonl`
