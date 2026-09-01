@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Yjs × ProseMirror IME harness</title>
+<style>
+  body { font: 14px/1.5 sans-serif; margin: 1rem; }
+  .ProseMirror { border: 1px solid #888; padding: .5rem; min-height: 4em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  pre { background: #f2f2f2; padding: .5rem; max-height: 20em; overflow: auto; }
+</style>
+<p>手順: 遅延を選び、シナリオボタンを押し、<b>A</b> の1段落目で変換中のまま待つ。B に対する編集が in-memory 同期で A に届く。</p>
+<p>
+  遅延 <select id="delay"><option>1000</option><option selected>3000</option><option>5000</option></select> ms
+  <button data-s="before">1 前方挿入</button>
+  <button data-s="after">2 後方挿入</button>
+  <button data-s="delete">3 段落テキスト削除</button>
+  <button data-s="split">4 段落分割</button>
+  <button id="reset">リセット</button>
+</p>
+<div class="cols">
+  <div><h3>A（ここでIME入力）</h3><div id="a"></div></div>
+  <div><h3>B（リモート役）</h3><div id="b"></div></div>
+</div>
+<pre id="log"></pre>
+<script type="module" src="./main.js"></script>
