@@ -39,4 +39,4 @@
 - Yjs × Lexical: Chrome で4シナリオ観測済み → [results/yjs-lexical.md](results/yjs-lexical.md)
 - 治具（手動）: `harness/<組み合わせ>/` で `pnpm run dev`。生ログは `results/*.jsonl`
 - 治具（自動、Chromium のみ）: `cd harness/auto && node run.mjs <組み合わせ>`。Playwright + CDP `Input.imeSetComposition` で変換中を作る。人力の記録との照合結果は各 results ファイルの「自動治具との照合」節。Yjs × ProseMirror / CodeMirror は 4/4 一致、Yjs × Lexical は 3/4（シナリオ 3 が不一致）
-- なぜ Chromium だけか: Playwright 1.62.1 のバンドルには composition を作る API がどのエンジンにもなく、Chromium だけは `newCDPSession` 経由で生の CDP `Input.imeSetComposition` を呼べる（インストールした `coreBundle.js` を grep して確認）。Firefox / WebKit には Playwright から生プロトコルへ触る口がない。標準の WebDriver / WebDriver BiDi に composition の命令がないことは未確認（記憶による）
+- 自動治具が Chromium でしか動かない理由と、それ自体が結果であること → [results/automation.md](results/automation.md)
