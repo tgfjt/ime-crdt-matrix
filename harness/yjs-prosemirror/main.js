@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import { ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo, prosemirrorJSONToYXmlFragment } from 'y-prosemirror'
+import { ySyncPluginKey, ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo, prosemirrorJSONToYXmlFragment } from 'y-prosemirror'
 import { EditorState } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
 import { schema } from 'prosemirror-schema-basic'
@@ -24,17 +24,28 @@ function makeView(mount, doc) {
       schema,
       plugins: [ySyncPlugin(frag), yUndoPlugin(), keymap({ 'Mod-z': undo, 'Mod-y': redo, 'Mod-Shift-z': redo }), keymap(baseKeymap)],
     }),
+    // y-prosemirror が dispatch した transaction の選択位置と、その後 state に入った選択位置を分けて記録する
+    dispatchTransaction(tr) {
+      const y = tr.getMeta(ySyncPluginKey)
+      if (y?.isChangeOrigin) log(`${mount.id.toUpperCase()} remote-tr sel=${tr.selection.from} docChanged=${tr.docChanged}`)
+      this.updateState(this.state.apply(tr))
+      if (y?.isChangeOrigin) log(`${mount.id.toUpperCase()} after-updateState state.sel=${this.state.selection.from} domSel=${domSelPos(this)}`)
+    },
   })
 }
+const domSelPos = view => { try { const s = document.getSelection(); return view.posAtDOM(s.focusNode, s.focusOffset) } catch { return '?' } }
 const viewA = makeView(document.getElementById('a'), docA)
 const viewB = makeView(document.getElementById('b'), docB)
 
 for (const ev of ['compositionstart', 'compositionupdate', 'compositionend']) {
   viewA.dom.addEventListener(ev, e => log(`A ${ev} data=${JSON.stringify(e.data)} composing=${viewA.composing}`))
 }
+viewA.dom.addEventListener('selectionchange', () => {})
 viewA.dom.addEventListener('beforeinput', e => log(`A beforeinput ${e.inputType} data=${JSON.stringify(e.data)}`))
 
-const dump = tag => log(`${tag} A=${JSON.stringify(viewA.state.doc.textContent)} B=${JSON.stringify(viewB.state.doc.textContent)} selA=${viewA.state.selection.from}`)
+// 各段落の Y.XmlElement を作ったクライアント（A=初期段落, B=リモートが新規作成）
+const paras = () => docA.getXmlFragment('pm').toArray().map(e => e._item.id.client === docA.clientID ? 'A' : 'B').join(',')
+const dump = tag => log(`${tag} A=${JSON.stringify(viewA.state.doc.textContent)} B=${JSON.stringify(viewB.state.doc.textContent)} selA=${viewA.state.selection.from} paras=${paras()}`)
 
 // B 側の1段落目に対して ProseMirror transaction で編集する（リモートユーザの操作を模す）
 const scenarios = {
