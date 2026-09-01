@@ -50,3 +50,18 @@ document.querySelectorAll('button[data-s]').forEach(b => b.onclick = () => {
   setTimeout(() => { dump('before-remote'); scenarios[s](); dump('after-remote'); setTimeout(() => dump('after-500ms'), 500) }, ms)
 })
 document.getElementById('reset').onclick = () => location.reload()
+
+let current = null
+document.querySelectorAll('button[data-s]').forEach(b => b.addEventListener('click', () => { current = b.dataset.s; logEl.textContent = '' }))
+document.getElementById('record').onclick = async () => {
+  const rec = {
+    at: new Date().toISOString(), scenario: current, verdict: document.getElementById('verdict').value,
+    ua: navigator.userAgent, platform: navigator.platform,
+    versions: __VERSIONS__,
+    finalA: viewA.state.doc.textContent, finalB: viewB.state.doc.textContent,
+    log: logEl.textContent,
+  }
+  await fetch('/record', { method: 'POST', body: JSON.stringify(rec) })
+  log(`recorded ${current}=${rec.verdict}`)
+  setTimeout(() => location.reload(), 300)
+}
