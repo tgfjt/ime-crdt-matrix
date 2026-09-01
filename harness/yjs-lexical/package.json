@@ -1,0 +1,20 @@
+{
+  "name": "harness-yjs-lexical",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@lexical/react": "^0.49.0",
+    "@lexical/yjs": "^0.49.0",
+    "lexical": "^0.49.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.32"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}
