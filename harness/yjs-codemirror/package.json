@@ -1,0 +1,17 @@
+{
+  "name": "harness-yjs-codemirror",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@codemirror/state": "^6.7.2",
+    "@codemirror/view": "^6.43.10",
+    "y-codemirror.next": "^0.3.6",
+    "yjs": "^13.6.32"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}

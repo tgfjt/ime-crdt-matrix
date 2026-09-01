@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Yjs × CodeMirror IME harness</title>
+<style>
+  body { font: 14px/1.5 sans-serif; margin: 1rem; }
+  .cm-editor { border: 1px solid #888; padding: .5rem; min-height: 4em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  pre { background: #f2f2f2; padding: .5rem; max-height: 20em; overflow: auto; }
+</style>
+<p>手順: 遅延を選び、シナリオボタンを押し、<b>A</b> の1行目で変換中のまま待つ。B に対する編集が in-memory 同期で A に届く。</p>
+<p>
+  遅延 <select id="delay"><option>1000</option><option selected>3000</option><option>5000</option></select> ms
+  <button data-s="before">1 前方挿入</button>
+  <button data-s="after">2 後方挿入</button>
+  <button data-s="delete">3 行テキスト削除</button>
+  <button data-s="split">4 行分割</button>
+  <button id="reset">リセット</button>
+  結果 <select id="verdict"><option value="ok">問題なし</option><option value="cursor">カーソル飛び</option><option value="commit">強制確定</option><option value="dup">二重化</option><option value="lost">入力消失</option></select>
+  <button id="record">記録して次へ</button>
+</p>
+<div class="cols">
+  <div><h3>A（ここでIME入力）</h3><div id="a"></div></div>
+  <div><h3>B（リモート役）</h3><div id="b"></div></div>
+</div>
+<pre id="log"></pre>
+<script type="module" src="./main.js"></script>
