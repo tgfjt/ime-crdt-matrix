@@ -49,4 +49,4 @@
 | 3 | 入力消失（「談」が DOM に入って直後に取り消される、Enter で空段落） | 新 `compositionstart` → 最終 `段落​`（ゼロ幅スペース付きで残る。`compositionend` の記録なし） | **不一致** |
 | 4 | B の編集の適用前に `compositionend`、Space が 2 段落目の先頭に入る | 適用前に `compositionend`、「文」が 2 段落目の先頭に入る → `あいうえお 文かきくけこぶん` | 一致 |
 
-3 の不一致について（未解明）: 人力では変換候補の切り替え（Space 連打）と Enter を経ているのに対し、自動は `imeSetComposition("段落")` → `Input.insertText("段落")` の 2 手。どちらの手順の差が結果の差に対応するかは未確認。Lexical の 3 は人力の記録を正とし、自動治具はこのシナリオを再現できていないものとして扱う。
+3 の不一致について（未解明）: `harness/auto/probe-lexical-delete.mjs` で自動側の手順を 3 通り試した（`insertText` のみ / 候補切り替え 談→団→段落 の後 `insertText` / 候補切り替えの後 Enter）。3 通りとも最終テキストは `段落` で残った。共通の経過: 最初の `compositionstart` の「談」は Lexical に取り消される（人力と同じ）が、その後 Chrome が `compositionstart data="談"` で composition を作り直し、以降の更新は通る。人力のログにはこの作り直しがなく、DOM の付け外しの後に `insertParagraph` だけが来ている。差は「Lexical が composition のテキストノードを取り消した後、本物の IME（Google 日本語入力）が composition を続行できるか」にあると推定するが、IME 側の挙動なので確認できない。Lexical の 3 は人力の記録を正とし、自動治具はこのシナリオを再現できていないものとして扱う。
