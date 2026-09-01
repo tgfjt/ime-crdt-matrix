@@ -22,4 +22,11 @@
 ## 補足
 
 - 2 と 4 で `compositionend` が発火していないのは事実だが、それは「問題なし」を意味しない。ブラウザが composition の対象ノードを見失い、次のキー入力が新しい composition として扱われる。
-- 4 でカーソルが分割点に移る原因は未調査（y-prosemirror の相対位置による選択復元の挙動と推測）。
+- 4 でカーソルが分割点に移る原因（確定、再実行ログとコード追跡による）:
+  1. y-prosemirror はリモート変更のたびに文書全体を置き換え、選択位置は変更前に保存した Yjs 相対位置から復元する（`sync-plugin.js` `_typeChanged` → `restoreRelativeSelection`）。
+  2. 変換中のカーソルは段落テキストの末尾にあるため、相対位置は「特定の文字の後」ではなく「その段落の XmlText の末尾」として符号化される（`lib.js` `absolutePositionToRelativePosition` → `createRelativePositionFromTypeIndex(text, length, 0)`）。
+  3. B 側の `updateYFragment` は ProseMirror の split を「元段落の末尾テキストを削除し、新しい段落要素を後ろに挿入」として Y.Doc に書く（Yjs の XmlFragment には移動がないため）。再実行ログの `paras=A,B` と `remote-tr sel=8` がこれを示す。
+  4. 結果、A の「元段落の末尾」は分割点 = 8 に解決する。ブラウザの DOM 選択もそれに従う（`domSel=8`）。
+  - 復元直後の transaction で既に 8 なので、ProseMirror の view 層ではなく y-prosemirror の符号化と位置復元の組み合わせが原因。
+  - Node だけの再現: `harness/yjs-prosemirror/split-cursor.test.mjs`（`node split-cursor.test.mjs`）。
+  - コードから導かれる帰結（未観測）: この機構は IME に限らない。リモートの段落分割で後半に移された範囲にカーソルを置いている全クライアントで、カーソルが分割点へ移動するはず。IME の場合はさらに composition の対象 DOM ノードが作り直されるため、次の入力が新しい composition として分割点に入り二重化する。
