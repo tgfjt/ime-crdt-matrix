@@ -12,7 +12,7 @@
 
 | 同期層 \ エディタ層 | ProseMirror | CodeMirror | Lexical |
 | --- | --- | --- | --- |
-| **Yjs** | 未検証 | 未検証 | 未検証 |
+| **Yjs** | [❌](results/yjs-prosemirror.md) 1✅ 2❌ 3⚠️ 4❌ | 未検証 | 未検証 |
 | **Loro** | 未検証 | 未検証 | 未検証 |
 | **Automerge** | 未検証 | 未検証 | 未検証 |
 
@@ -29,4 +29,5 @@
 
 ## ステータス
 
-枠のみ。治具・結果はこれから。
+- Yjs × ProseMirror: 手動治具で4シナリオ観測済み → [results/yjs-prosemirror.md](results/yjs-prosemirror.md)
+- 治具: `harness/<組み合わせ>/` で `pnpm run dev`。生ログは `results/*.jsonl`
